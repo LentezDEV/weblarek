@@ -21,13 +21,18 @@ export class Buyer {
     }
   }
 
-  getData(): IBuyer {
-    return {
-      payment: this.payment as IBuyer['payment'],
+  getData(): Partial<IBuyer> {
+    const data: Partial<IBuyer> = {
       email: this.email,
       phone: this.phone,
       address: this.address,
     };
+
+    if (this.payment !== null) {
+      data.payment = this.payment;
+    }
+
+    return data;
   }
 
   clear(): void {
