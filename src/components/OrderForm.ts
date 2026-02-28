@@ -4,7 +4,7 @@ import { Form } from './base/Form';
 import type { IEvents } from './base/Events';
 
 export interface IOrderFormData {
-    payment: TPayment;
+    payment: TPayment | null;
     address: string;
 }
 
@@ -28,9 +28,9 @@ export class OrderForm extends Form<IOrderFormData> {
         });
     }
 
-    set payment(value: TPayment) {
+    set payment(value: TPayment | null) {
         this.paymentButtons.forEach((button) => {
-            this.toggleClass(button, 'button_alt-active', button.name === value);
+            this.toggleClass(button, 'button_alt-active', value !== null && button.name === value);
         });
     }
 

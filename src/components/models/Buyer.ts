@@ -71,16 +71,16 @@ export class Buyer {
     const errors: Partial<Record<keyof IBuyer, string>> = {};
 
     if (!this.payment) {
-      errors.payment = 'Payment is required';
+      errors.payment = 'Выберите способ оплаты';
     }
     if (!this.email.trim()) {
-      errors.email = 'Email is required';
+      errors.email = 'Укажите email';
     }
     if (!this.phone.trim()) {
-      errors.phone = 'Phone is required';
+      errors.phone = 'Укажите телефон';
     }
     if (!this.address.trim()) {
-      errors.address = 'Address is required';
+      errors.address = 'Укажите адрес доставки';
     }
 
     return errors;
