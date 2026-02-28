@@ -8,12 +8,12 @@ export class ProductsCatalog {
     constructor(private readonly events?: IEvents) {}
 
     setItems(items: IProduct[]): void {
-        this.items = items;
-        this.events?.emit('catalog:changed', { items: this.items });
+        this.items = [...items];
+        this.events?.emit('catalog:changed', { items: this.getItems() });
     }
 
     getItems(): IProduct[] {
-        return this.items;
+        return [...this.items];
     }
 
     getItem(id: string): IProduct | undefined {

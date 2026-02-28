@@ -2,11 +2,11 @@ export function pascalToKebab(value: string): string {
     return value.replace(/([a-z0–9])([A-Z])/g, "$1-$2").toLowerCase();
 }
 
-export function isSelector(x: any): x is string {
+export function isSelector(x: unknown): x is string {
     return (typeof x === "string") && x.length > 1;
 }
 
-export function isEmpty(value: any): boolean {
+export function isEmpty(value: unknown): boolean {
     return value === null || value === undefined;
 }
 
@@ -30,9 +30,6 @@ export type SelectorElement<T> = T | string;
 export function ensureElement<T extends HTMLElement>(selectorElement: SelectorElement<T>, context?: HTMLElement): T {
     if (isSelector(selectorElement)) {
         const elements = ensureAllElements<T>(selectorElement, context);
-        if (elements.length > 1) {
-            console.warn(`selector ${selectorElement} return more then one element`);
-        }
         if (elements.length === 0) {
             throw new Error(`selector ${selectorElement} return nothing`);
         }
@@ -84,10 +81,13 @@ export function setElementData<T extends Record<string, unknown> | object>(el: H
 /**
  * Получает типизированные данные из dataset атрибутов элемента
  */
-export function getElementData<T extends Record<string, unknown>>(el: HTMLElement, scheme: Record<string, Function>): T {
+export function getElementData<T extends Record<string, unknown>>(
+    el: HTMLElement,
+    scheme: Record<string, (value: string | undefined) => unknown>
+): T {
     const data: Partial<T> = {};
     for (const key in el.dataset) {
-        data[key as keyof T] = scheme[key](el.dataset[key]);
+        data[key as keyof T] = scheme[key](el.dataset[key]) as T[keyof T];
     }
     return data as T;
 }
@@ -119,13 +119,14 @@ export function createElement<
 ): T {
     const element = document.createElement(tagName) as T;
     if (props) {
+        const elementRecord = element as unknown as Record<string, unknown>;
+
         for (const key in props) {
             const value = props[key];
             if (isPlainObject(value) && key === 'dataset') {
                 setElementData(element, value);
             } else {
-                // @ts-expect-error fix indexing later
-                element[key] = isBoolean(value) ? value : String(value);
+                elementRecord[key] = isBoolean(value) ? value : String(value);
             }
         }
     }

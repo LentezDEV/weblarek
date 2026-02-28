@@ -1,4 +1,9 @@
-const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || 'https://larek-api.nomoreparties.co';
+const apiOrigin = import.meta.env.VITE_API_ORIGIN;
+const API_ORIGIN = typeof apiOrigin === 'string' ? apiOrigin.trim() : '';
+
+if (!API_ORIGIN) {
+  throw new Error('VITE_API_ORIGIN is not defined');
+}
 
 /* Константа для получения полного пути для сервера. Для выполнения запроса 
 необходимо к API_URL добавить только ендпоинт. */

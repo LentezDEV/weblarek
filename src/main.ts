@@ -17,7 +17,6 @@ import { Basket } from './components/models/Basket';
 import { Buyer } from './components/models/Buyer';
 import { ProductsCatalog } from './components/models/ProductsCatalog';
 import { API_URL } from './utils/constants';
-import { apiProducts } from './utils/data';
 import { cloneTemplate, ensureElement } from './utils/utils';
 
 type TModalView = 'preview' | 'basket' | 'order' | 'contacts' | 'success' | null;
@@ -74,13 +73,14 @@ function renderPreview(openModal = true): void {
 
   const inBasket = basketModel.hasItem(product.id);
   const unavailable = product.price === null;
-  const buttonText = unavailable ? 'Недоступно' : inBasket ? 'Уже в корзине' : 'В корзину';
+  const buttonText = unavailable ? 'Недоступно' : inBasket ? 'Удалить из корзины' : 'Купить';
 
   setModalContent(
     previewCard.render({
       ...product,
       buttonText,
-      buttonDisabled: unavailable || inBasket,
+      buttonDisabled: unavailable,
+      buttonAction: inBasket ? 'remove' : 'add',
     }),
     'preview',
     openModal,
@@ -207,7 +207,19 @@ events.on<{ id: string }>('card:add', ({ id }) => {
     return;
   }
 
+  productsCatalogModel.setPreview(null);
   basketModel.addItem(product);
+});
+
+events.on<{ id: string }>('card:remove', ({ id }) => {
+  const product = basketModel.getItems().find((item) => item.id === id);
+
+  if (!product) {
+    return;
+  }
+
+  productsCatalogModel.setPreview(null);
+  basketModel.removeItem(product);
 });
 
 events.on<{ id: string }>('basket:remove', ({ id }) => {
@@ -317,5 +329,4 @@ webLarekApi
   })
   .catch((error: unknown) => {
     console.error('Ошибка загрузки товаров:', error);
-    productsCatalogModel.setItems(apiProducts.items);
   });
