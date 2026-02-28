@@ -1,4 +1,3 @@
-import type { IEvents } from './base/Events';
 import { Card, type ICardData } from './Card';
 import { ensureElement } from '../utils/utils';
 
@@ -6,20 +5,22 @@ export interface ICardBasketData extends ICardData {
     index: number;
 }
 
+export interface ICardBasketActions {
+    onDelete: () => void;
+}
+
 export class CardBasket extends Card<ICardBasketData> {
     private readonly indexElement: HTMLElement;
     private readonly deleteButton: HTMLButtonElement;
 
-    constructor(container: HTMLElement, events: IEvents) {
-        super(container, events);
+    constructor(container: HTMLElement, actions: ICardBasketActions) {
+        super(container);
 
         this.indexElement = ensureElement<HTMLElement>('.basket__item-index', container);
         this.deleteButton = ensureElement<HTMLButtonElement>('.basket__item-delete', container);
 
         this.deleteButton.addEventListener('click', () => {
-            this.events.emit('basket:remove', {
-                id: this.container.dataset.id ?? '',
-            });
+            actions.onDelete();
         });
     }
 

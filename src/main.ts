@@ -82,10 +82,13 @@ function renderPreview(openModal = true): void {
 
   setModalContent(
     previewCard.render({
-      ...product,
+      title: product.title,
+      price: product.price,
+      category: product.category,
+      image: product.image,
+      description: product.description,
       buttonText,
       buttonDisabled: unavailable,
-      buttonAction: inBasket ? 'remove' : 'add',
     }),
     'preview',
     openModal,
@@ -94,10 +97,15 @@ function renderPreview(openModal = true): void {
 
 function renderBasket(openModal = true): void {
   const items = basketModel.getItems().map((item, index) => {
-    const card = new CardBasket(cloneTemplate<HTMLElement>('#card-basket'), events);
+    const card = new CardBasket(cloneTemplate<HTMLElement>('#card-basket'), {
+      onDelete: () => {
+        basketModel.removeItem(item);
+      },
+    });
 
     return card.render({
-      ...item,
+      title: item.title,
+      price: item.price,
       index: index + 1,
     });
   });
@@ -161,9 +169,18 @@ function renderSuccess(total: number): void {
 
 events.on('catalog:changed', () => {
   const cards = productsCatalogModel.getItems().map((item) => {
-    const card = new CardCatalog(cloneTemplate<HTMLButtonElement>('#card-catalog'), events);
+    const card = new CardCatalog(cloneTemplate<HTMLButtonElement>('#card-catalog'), {
+      onSelect: () => {
+        productsCatalogModel.setPreview(item);
+      },
+    });
 
-    return card.render(item);
+    return card.render({
+      title: item.title,
+      price: item.price,
+      category: item.category,
+      image: item.image,
+    });
   });
 
   gallery.render({ items: cards });
@@ -204,42 +221,21 @@ events.on('buyer:changed', () => {
   }
 });
 
-events.on<{ id: string }>('card:select', ({ id }) => {
-  const product = productsCatalogModel.getItem(id);
+events.on('preview:toggle', () => {
+  const product = productsCatalogModel.getPreview();
 
-  if (product) {
-    productsCatalogModel.setPreview(product);
-  }
-});
-
-events.on<{ id: string }>('card:add', ({ id }) => {
-  const product = productsCatalogModel.getItem(id);
-
-  if (!product || product.price === null || basketModel.hasItem(product.id)) {
+  if (!product || product.price === null) {
     return;
   }
 
   productsCatalogModel.setPreview(null);
-  basketModel.addItem(product);
-});
 
-events.on<{ id: string }>('card:remove', ({ id }) => {
-  const product = basketModel.getItems().find((item) => item.id === id);
-
-  if (!product) {
-    return;
-  }
-
-  productsCatalogModel.setPreview(null);
-  basketModel.removeItem(product);
-});
-
-events.on<{ id: string }>('basket:remove', ({ id }) => {
-  const product = basketModel.getItems().find((item) => item.id === id);
-
-  if (product) {
+  if (basketModel.hasItem(product.id)) {
     basketModel.removeItem(product);
+    return;
   }
+
+  basketModel.addItem(product);
 });
 
 events.on('basket:open', () => {
@@ -265,12 +261,6 @@ events.on<{ value: string }>('order.address:change', ({ value }) => {
 });
 
 events.on('order:submit', () => {
-  const errors = buyerModel.validate();
-
-  if (errors.payment || errors.address || basketModel.getCount() === 0) {
-    return;
-  }
-
   renderContacts();
 });
 
@@ -283,30 +273,15 @@ events.on<{ value: string }>('contacts.phone:change', ({ value }) => {
 });
 
 events.on('contacts:submit', () => {
-  const errors = buyerModel.validate();
   const buyerData = buyerModel.getData();
   const basketItems = basketModel.getItems();
 
-  if (
-    errors.payment ||
-    errors.address ||
-    errors.email ||
-    errors.phone ||
-    !buyerData.payment ||
-    !buyerData.email ||
-    !buyerData.phone ||
-    !buyerData.address ||
-    basketItems.length === 0
-  ) {
-    return;
-  }
-
   webLarekApi
     .createOrder({
-      payment: buyerData.payment,
-      email: buyerData.email,
-      phone: buyerData.phone,
-      address: buyerData.address,
+      payment: buyerData.payment!,
+      email: buyerData.email!,
+      phone: buyerData.phone!,
+      address: buyerData.address!,
       items: basketItems.map((item) => item.id),
       total: basketModel.getTotal(),
     })

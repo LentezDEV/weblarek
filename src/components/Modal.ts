@@ -25,24 +25,26 @@ export class Modal extends Component<IModalData> {
                 this.events.emit('modal:close');
             }
         });
-
-        document.addEventListener('keydown', (event) => {
-            if (event.key === 'Escape' && this.container.classList.contains('modal_active')) {
-                this.events.emit('modal:close');
-            }
-        });
     }
 
     set content(value: HTMLElement) {
         this.setChildren(this.contentElement, [value]);
     }
 
+    private closeByEsc = (event: KeyboardEvent): void => {
+        if (event.key === 'Escape') {
+            this.events.emit('modal:close');
+        }
+    };
+
     open() {
         this.toggleClass(this.container, 'modal_active', true);
+        document.addEventListener('keydown', this.closeByEsc);
     }
 
     close() {
         this.toggleClass(this.container, 'modal_active', false);
+        document.removeEventListener('keydown', this.closeByEsc);
         this.contentElement.replaceChildren();
     }
 }
