@@ -39,6 +39,7 @@ const contactsForm = new ContactsForm(cloneTemplate<HTMLFormElement>('#contacts'
 const orderSuccess = new OrderSuccess(cloneTemplate<HTMLElement>('#success'), events);
 
 let activeModalView: TModalView = null;
+let orderInteracted = false;
 
 function formatErrors(messages: Array<string | undefined>): string {
   return messages
@@ -51,8 +52,12 @@ function setModalContent(
   view: Exclude<TModalView, null>,
   openModal = true,
 ): void {
+  const shouldReplaceContent = openModal || activeModalView !== view;
   activeModalView = view;
-  modal.render({ content });
+
+  if (shouldReplaceContent) {
+    modal.render({ content });
+  }
 
   if (openModal) {
     modal.open();
@@ -109,15 +114,22 @@ function renderBasket(openModal = true): void {
 }
 
 function renderOrder(openModal = true): void {
+  if (openModal) {
+    orderInteracted = false;
+  }
+
   const buyerData = buyerModel.getData();
   const errors = buyerModel.validate();
+  const orderErrors = orderInteracted && buyerData.payment
+    ? formatErrors([errors.address])
+    : '';
 
   setModalContent(
     orderForm.render({
       payment: buyerData.payment ?? null,
       address: buyerData.address ?? '',
       valid: !errors.payment && !errors.address,
-      errors: formatErrors([errors.payment, errors.address]),
+      errors: orderErrors,
     }),
     'order',
     openModal,
@@ -243,10 +255,12 @@ events.on('basket:submit', () => {
 });
 
 events.on<{ payment: 'card' | 'cash' }>('order.payment:change', ({ payment }) => {
+  orderInteracted = true;
   buyerModel.setData({ payment });
 });
 
 events.on<{ value: string }>('order.address:change', ({ value }) => {
+  orderInteracted = true;
   buyerModel.setData({ address: value });
 });
 
