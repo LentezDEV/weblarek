@@ -80,7 +80,7 @@ export class Buyer {
       errors.phone = 'Укажите телефон';
     }
     if (!this.address.trim()) {
-      errors.address = 'Укажите адрес доставки';
+      errors.address = 'Необходимо указать адрес';
     }
 
     return errors;
