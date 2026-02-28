@@ -18,6 +18,24 @@ export abstract class Component<T> {
         }
     }
 
+    protected setText(element: HTMLElement, value: unknown) {
+        element.textContent = value === null || value === undefined ? '' : String(value);
+    }
+
+    protected setDisabled(element: HTMLElement, state: boolean) {
+        if ('disabled' in element) {
+            (element as HTMLButtonElement).disabled = state;
+        }
+    }
+
+    protected toggleClass(element: HTMLElement, className: string, force?: boolean) {
+        element.classList.toggle(className, force);
+    }
+
+    protected setChildren(element: HTMLElement, children: HTMLElement[]) {
+        element.replaceChildren(...children);
+    }
+
     // Вернуть корневой DOM-элемент
     render(data?: Partial<T>): HTMLElement {
         Object.assign(this as object, data ?? {});

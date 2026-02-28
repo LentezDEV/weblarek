@@ -1,7 +1,10 @@
+import type { IEvents } from '../base/Events';
 import type { IProduct } from '../../types';
 
 export class Basket {
   private items: IProduct[] = [];
+
+  constructor(private readonly events?: IEvents) {}
 
   getItems(): IProduct[] {
     return [...this.items];
@@ -9,6 +12,11 @@ export class Basket {
 
   addItem(item: IProduct): void {
     this.items.push(item);
+    this.events?.emit('basket:changed', {
+      items: this.getItems(),
+      total: this.getTotal(),
+      count: this.getCount(),
+    });
   }
 
   removeItem(item: IProduct): void {
@@ -16,11 +24,25 @@ export class Basket {
 
     if (index !== -1) {
       this.items.splice(index, 1);
+      this.events?.emit('basket:changed', {
+        items: this.getItems(),
+        total: this.getTotal(),
+        count: this.getCount(),
+      });
     }
   }
 
   clear(): void {
+    if (this.items.length === 0) {
+      return;
+    }
+
     this.items = [];
+    this.events?.emit('basket:changed', {
+      items: this.getItems(),
+      total: this.getTotal(),
+      count: this.getCount(),
+    });
   }
 
   getTotal(): number {
